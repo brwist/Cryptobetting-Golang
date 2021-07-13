@@ -6,7 +6,8 @@ require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/containerd/continuity v0.1.0 // indirect
 	github.com/go-co-op/gocron v1.6.2 // indirect
-	github.com/gotestyourself/gotestyourself v1.3.0 // indirect 
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/gotestyourself/gotestyourself v1.3.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/labstack/echo/v4 v4.2.2
