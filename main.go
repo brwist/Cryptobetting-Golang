@@ -8,12 +8,53 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+// config
+var (
+	DB_NAME     = ""
+	DB_HOST     = ""
+	DB_USER     = ""
+	DB_PASSWORD = ""
+	DB_PORT     = ""
+	HTTP_PORT   = ""
+)
+
+func loadEnvirontment() {
+
+	// init config
+	godotenv.Load()
+
+	// init values
+	DB_NAME = os.Getenv("DB_NAME")
+	DB_HOST = os.Getenv("DB_HOST")
+	DB_USER = os.Getenv("DB_USER")
+	DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	DB_PORT = os.Getenv("DB_PORT")
+	HTTP_PORT = os.Getenv("HTTP_PORT")
+}
+
+// connection instance
+func createConnection() *gorm.DB {
+
+	// data source
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
+
+	// db connection
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect database")
+	}
+
+	return db
+}
 
 // entities
 type (
@@ -26,30 +67,9 @@ type (
 		FixtureCreated bool
 		FixtureEnded   time.Time
 		Price          float64
+		ExpiryTime     time.Time
 	}
 )
-
-// create connection
-func createConnection() *gorm.DB {
-
-	// connection string
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbPort := os.Getenv("DB_PORT")
-
-	// data source
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
-
-	// db connection
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect database")
-	}
-
-	return db
-}
 
 // schema migration
 func migrateSchema() {
@@ -77,7 +97,17 @@ func startScheduler() {
 
 			// create record
 			db := createConnection()
-			db.Create(&Fixture{StartTime: timeNow.Add(time.Duration(-15) * time.Minute), EndTime: timeNow, MarketEndTime: timeNow.Add(time.Duration(-5) * time.Minute)})
+			db.Create(&Fixture{
+				FixtureID:      0,
+				StartTime:      timeNow.Add(time.Duration(-15) * time.Minute),
+				MarketEndTime:  timeNow.Add(time.Duration(-5) * time.Minute),
+				EndTime:        timeNow,
+				EndPrice:       0,
+				FixtureCreated: false,
+				FixtureEnded:   time.Time{},
+				Price:          0,
+				ExpiryTime:     timeNow,
+			})
 			log.Println("Fixture created!")
 		}
 
@@ -87,30 +117,106 @@ func startScheduler() {
 	sched.StartAsync()
 }
 
+// fixture logic
+type (
+	CreateFixtureItem struct {
+		Id            int64
+		StartTime     string
+		MarketEndTime string
+		EndTime       string
+	}
+	CreateFixtureReq struct {
+		Timestamp string
+		Seq       string
+		Fixture   CreateFixtureItem
+	}
+	CreateFixtureRes struct {
+		Timestamp string
+		Seq       string
+		Status    int
+		Message   string
+	}
+	EndFixtureItem struct {
+		Id     int64
+		Price  string
+		Status int
+	}
+	EndFixtureReq struct {
+		Timestamp string
+		Seq       string
+		Fixture   EndFixtureItem
+	}
+	EndFixtureRes struct {
+		Timestamp string
+		Seq       string
+		Status    int
+		Message   string
+	}
+)
+
+func createFixture(fixture *CreateFixtureReq) CreateFixtureRes {
+	var res CreateFixtureRes
+
+	res.Timestamp = time.Now().String()
+	res.Seq = uuid.New().String()
+	res.Message = "Success"
+	res.Status = 0
+
+	return res
+}
+
+func endFixture(fixture *EndFixtureReq) EndFixtureRes {
+	var res EndFixtureRes
+
+	res.Timestamp = time.Now().String()
+	res.Seq = uuid.New().String()
+	res.Message = "Success"
+	res.Status = 0
+
+	return res
+}
+
 // run server
 func runServer() {
 
 	ech := echo.New()
+
 	ech.Use(middleware.Logger())
 	ech.Use(middleware.Recover())
+	ech.Use(middleware.CORS())
+
 	ech.GET("/", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, "Welcome Gambling API V1!")
+		return c.HTML(http.StatusOK, "Welcome Gambling!")
 	})
-	ech.POST("/CreateFixture", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "Create Fixture")
+	ech.GET("/api", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, "Api v1")
 	})
-	ech.POST("/EndFixture", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "End Fixture")
+	ech.POST("/api/CreateFixture", func(ctx echo.Context) error {
+		req := &CreateFixtureReq{}
+		err := ctx.Bind(req)
+		if err != nil {
+			return err
+		}
+		res := createFixture(req)
+		return ctx.JSON(http.StatusOK, res)
 	})
-	httpPort := os.Getenv("HTTP_PORT")
-	ech.Logger.Fatal(ech.Start(":" + httpPort))
+	ech.POST("/api/EndFixture", func(ctx echo.Context) error {
+		req := &EndFixtureReq{}
+		err := ctx.Bind(req)
+		if err != nil {
+			return err
+		}
+		res := endFixture(req)
+		return ctx.JSON(http.StatusOK, res)
+	})
+	ech.Logger.Fatal(ech.Start(":" + HTTP_PORT))
 
 }
 
 func main() {
 
 	// env file
-	godotenv.Load()
+	loadEnvirontment()
 
 	// create schema
 	migrateSchema()
