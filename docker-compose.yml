@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:latest
+    expose:
+      - "5433"
+    ports:
+      - "5433:5433"
+    command: -p 5433
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+    volumes:
+      - my_data:/var/lib/postgresql/data
+    networks:
+      - my_network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=12345
+      - DB_HOST=db
+      - DB_PORT=5433
+      - HTTP_PORT=8001
+    networks:
+      - my_network
+
+volumes:
+  my_data:
+
+networks:
+  my_network:
+    driver: bridge
