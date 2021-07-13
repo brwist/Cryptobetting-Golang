@@ -8,6 +8,18 @@ Go,Postgresql,ORM, Environment ,Docker
 go run main.go
 ```
 
+## Build application
+
+```sh
+go build -v ./...
+```
+
+## Test application
+
+```sh
+go test -v ./...
+```
+
 ## Containerize Docker
 
 ```sh
