@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -67,8 +68,6 @@ type (
 		FixtureEnded   time.Time
 		Price          float64
 		ExpiryTime     time.Time
-		EndFixture     time.Time
-		Status         int
 	}
 )
 
@@ -108,7 +107,6 @@ func startScheduler() {
 				FixtureEnded:   time.Time{},
 				Price:          0,
 				ExpiryTime:     timeNow,
-				EndFixture:     time.Time{},
 			})
 			log.Println("Fixture created!")
 		}
@@ -156,39 +154,24 @@ type (
 	}
 )
 
-func createFixture(req *CreateFixtureReq) CreateFixtureRes {
+func createFixture(fixture *CreateFixtureReq) CreateFixtureRes {
 	var res CreateFixtureRes
-	var fixture Fixture
-	db := createConnection()
-
-	db.First(&fixture, 1)
-	db.First(&fixture, "fixture_id = ?", req.Fixture.Id)
-	db.Model(&fixture).Update("EndTime", req.Fixture.EndTime)
-	db.Model(&fixture).Update("MarketEndTime", req.Fixture.MarketEndTime)
-	db.Model(&fixture).Update("StartTime", req.Fixture.StartTime)
 
 	res.Timestamp = time.Now().String()
-	res.Seq = req.Seq
+	res.Seq = uuid.New().String()
 	res.Message = "Success"
-	res.Status = fixture.Status
+	res.Status = 0
 
 	return res
 }
 
-func endFixture(req *EndFixtureReq) EndFixtureRes {
+func endFixture(fixture *EndFixtureReq) EndFixtureRes {
 	var res EndFixtureRes
-	var fixture Fixture
-	db := createConnection()
-
-	db.First(&fixture, 1)
-	db.First(&fixture, "fixture_id = ?", req.Fixture.Id)
-	db.Model(&fixture).Update("Price", req.Fixture.Price)
-	db.Model(&fixture).Update("Status", req.Fixture.Status)
 
 	res.Timestamp = time.Now().String()
-	res.Seq = req.Seq
+	res.Seq = uuid.New().String()
 	res.Message = "Success"
-	res.Status = req.Fixture.Status
+	res.Status = 0
 
 	return res
 }
