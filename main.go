@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
-	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -57,6 +58,15 @@ func createConnection() *gorm.DB {
 }
 
 // entities
+const (
+
+	// valid fixture, operator can start settlement
+	ValidFixture = 0
+
+	//  TBD, reserved for errors in fixtures
+	OthersFixture = -1
+)
+
 type (
 	Fixture struct {
 		FixtureID      int64     `gorm:"primaryKey;AUTO_INCREMENT"`
@@ -68,6 +78,8 @@ type (
 		FixtureEnded   time.Time
 		Price          float64
 		ExpiryTime     time.Time
+		EndFixture     time.Time
+		Status         int
 	}
 )
 
@@ -107,6 +119,8 @@ func startScheduler() {
 				FixtureEnded:   time.Time{},
 				Price:          0,
 				ExpiryTime:     timeNow,
+				EndFixture:     time.Time{},
+				Status:         OthersFixture,
 			})
 			log.Println("Fixture created!")
 		}
@@ -117,7 +131,7 @@ func startScheduler() {
 	sched.StartAsync()
 }
 
-// fixture logic
+// fixture api
 type (
 	CreateFixtureItem struct {
 		Id            int64
@@ -154,26 +168,108 @@ type (
 	}
 )
 
-func createFixture(fixture *CreateFixtureReq) CreateFixtureRes {
+func createFixture(req *CreateFixtureReq) CreateFixtureRes {
 	var res CreateFixtureRes
+	var fixture Fixture
+	db := createConnection()
+
+	db.First(&fixture, 1)
+	db.First(&fixture, "fixture_id = ?", req.Fixture.Id)
+
+	db.Model(&fixture).Update("EndTime", req.Fixture.EndTime)
+	db.Model(&fixture).Update("MarketEndTime", req.Fixture.MarketEndTime)
+	db.Model(&fixture).Update("StartTime", req.Fixture.StartTime)
+	db.Model(&fixture).Update("Status", OthersFixture)
 
 	res.Timestamp = time.Now().String()
-	res.Seq = uuid.New().String()
+	res.Seq = req.Seq
 	res.Message = "Success"
-	res.Status = 0
+	res.Status = OthersFixture
 
 	return res
 }
 
-func endFixture(fixture *EndFixtureReq) EndFixtureRes {
+func endFixture(req *EndFixtureReq) EndFixtureRes {
 	var res EndFixtureRes
+	var fixture Fixture
+	db := createConnection()
+
+	db.First(&fixture, 1)
+	db.First(&fixture, "fixture_id = ?", req.Fixture.Id)
+
+	db.Model(&fixture).Update("Price", req.Fixture.Price)
+	db.Model(&fixture).Update("Status", ValidFixture)
 
 	res.Timestamp = time.Now().String()
-	res.Seq = uuid.New().String()
+	res.Seq = req.Seq
 	res.Message = "Success"
-	res.Status = 0
+	res.Status = ValidFixture
 
 	return res
+}
+
+// fixture socket
+const (
+
+	// price only
+	OnlyPriceType = 1
+
+	//  price + lines
+	PriceLineType = 2
+)
+
+type (
+	WsFixtureProbability struct {
+		Strike float64
+		Over   float32
+		Under  float32
+	}
+	WsFixtureItem struct {
+		FixtureId     int64
+		Probabilities []WsFixtureProbability
+	}
+	WsFixtureRes struct {
+		Timestamp string
+		Price     float64
+		Type      int
+		Fixtures  []WsFixtureItem
+	}
+)
+
+var (
+	upgrader     = websocket.Upgrader{}
+	wsFixtureRes = &WsFixtureRes{
+		Timestamp: time.Now().String(),
+		Price:     0,
+		Type:      OnlyPriceType,
+		Fixtures:  []WsFixtureItem{},
+	}
+)
+
+func serveWebsocket(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+
+	for {
+		//store
+		data, _ := json.Marshal(wsFixtureRes)
+
+		// Write
+		err := ws.WriteMessage(websocket.TextMessage, []byte(data))
+		if err != nil {
+			c.Logger().Error(err)
+		}
+
+		// Read
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			c.Logger().Error(err)
+		}
+		fmt.Printf("%s\n", msg)
+	}
 }
 
 // run server
@@ -187,9 +283,6 @@ func runServer() {
 
 	ech.GET("/", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, "Welcome Gambling!")
-	})
-	ech.GET("/api", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "Api v1")
 	})
 	ech.POST("/api/CreateFixture", func(ctx echo.Context) error {
 		req := &CreateFixtureReq{}
@@ -209,6 +302,7 @@ func runServer() {
 		res := endFixture(req)
 		return ctx.JSON(http.StatusOK, res)
 	})
+	ech.GET("/ws/Fixtures", serveWebsocket)
 	ech.Logger.Fatal(ech.Start(":" + HTTP_PORT))
 
 }
