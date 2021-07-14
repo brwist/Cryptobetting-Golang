@@ -2,12 +2,6 @@
 
 Go,Postgresql,ORM, Environment ,Docker
 
-## Install dependencies
-
-```sh
-go list -m -u all
-```
-
 ## Run application
 
 ```sh
