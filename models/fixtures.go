@@ -1,7 +1,9 @@
-package db
+package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // fixture api
@@ -66,10 +68,9 @@ type (
 	}
 )
 
-func CreateFixture(req *CreateFixtureReq) CreateFixtureRes {
+func CreateFixture(req *CreateFixtureReq, db *gorm.DB) CreateFixtureRes {
 	var res CreateFixtureRes
 	var fixture Fixture
-	db := CreateConnection()
 
 	db.First(&fixture, 1)
 	db.First(&fixture, "fixture_id = ?", req.Fixture.Id)
@@ -87,10 +88,9 @@ func CreateFixture(req *CreateFixtureReq) CreateFixtureRes {
 	return res
 }
 
-func EndFixture(req *EndFixtureReq) EndFixtureRes {
+func EndFixture(req *EndFixtureReq, db *gorm.DB) EndFixtureRes {
 	var res EndFixtureRes
 	var fixture Fixture
-	db := CreateConnection()
 
 	db.First(&fixture, 1)
 	db.First(&fixture, "fixture_id = ?", req.Fixture.Id)

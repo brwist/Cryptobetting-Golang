@@ -5,14 +5,17 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/onemanshow79/Cryptobetting/db"
+	"github.com/onemanshow79/Cryptobetting/models"
 )
 
 func EndFixture (ctx echo.Context) error {
-	req := &db.EndFixtureReq{}
+	req := &models.EndFixtureReq{}
 	err := ctx.Bind(req)
 	if err != nil {
 		return err
 	}
-	res := db.EndFixture(req)
+	db := db.CreateConnection()
+
+	res := models.EndFixture(req, db)
 	return ctx.JSON(http.StatusOK, res)
 }

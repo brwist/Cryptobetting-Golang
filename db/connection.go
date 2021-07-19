@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/onemanshow79/Cryptobetting/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -47,7 +48,7 @@ func migrateSchema() {
 	db.Debug()
 
 	// auto migration
-	db.AutoMigrate(&Fixture{})
+	db.AutoMigrate(&models.Fixture{})
 	log.Println("Successfully migrated!")
 }
 
