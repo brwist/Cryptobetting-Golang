@@ -3,12 +3,12 @@ package fixtures
 import (
 	"net/http"
 
+	"github.com/allgoodworks/Cryptobetting-Golang/db"
+	"github.com/allgoodworks/Cryptobetting-Golang/models"
 	"github.com/labstack/echo/v4"
-	"github.com/onemanshow79/Cryptobetting/db"
-	"github.com/onemanshow79/Cryptobetting/models"
 )
 
-func EndFixture (ctx echo.Context) error {
+func EndFixture(ctx echo.Context) error {
 	req := &models.EndFixtureReq{}
 	err := ctx.Bind(req)
 	if err != nil {

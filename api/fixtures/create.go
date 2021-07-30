@@ -3,9 +3,9 @@ package fixtures
 import (
 	"net/http"
 
+	"github.com/allgoodworks/Cryptobetting-Golang/db"
+	"github.com/allgoodworks/Cryptobetting-Golang/models"
 	"github.com/labstack/echo/v4"
-	"github.com/onemanshow79/Cryptobetting/db"
-	"github.com/onemanshow79/Cryptobetting/models"
 )
 
 func CreateFixture (ctx echo.Context) error {

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/allgoodworks/Cryptobetting-Golang/db"
+	"github.com/allgoodworks/Cryptobetting-Golang/models"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"github.com/onemanshow79/Cryptobetting/db"
-	"github.com/onemanshow79/Cryptobetting/models"
 )
 
 // fixture socket

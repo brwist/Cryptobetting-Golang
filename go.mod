@@ -1,4 +1,4 @@
-module github.com/onemanshow79/Cryptobetting
+module github.com/allgoodworks/Cryptobetting-Golang
 
 go 1.16
 

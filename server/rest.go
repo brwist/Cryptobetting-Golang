@@ -1,11 +1,11 @@
 package server
 
 import (
+	"github.com/allgoodworks/Cryptobetting-Golang/api"
+	"github.com/allgoodworks/Cryptobetting-Golang/api/fixtures"
+	"github.com/allgoodworks/Cryptobetting-Golang/db"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/onemanshow79/Cryptobetting/api"
-	"github.com/onemanshow79/Cryptobetting/api/fixtures"
-	"github.com/onemanshow79/Cryptobetting/db"
 )
 
 // run server

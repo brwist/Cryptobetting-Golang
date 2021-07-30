@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/allgoodworks/Cryptobetting-Golang/models"
 	"github.com/joho/godotenv"
-	"github.com/onemanshow79/Cryptobetting/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

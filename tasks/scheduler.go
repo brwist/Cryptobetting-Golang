@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/allgoodworks/Cryptobetting-Golang/db"
+	"github.com/allgoodworks/Cryptobetting-Golang/models"
 	"github.com/go-co-op/gocron"
-	"github.com/onemanshow79/Cryptobetting/db"
-	"github.com/onemanshow79/Cryptobetting/models"
 )
 
 // Start scheduler
