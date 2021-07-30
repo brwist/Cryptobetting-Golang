@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>WebSocket Test</title>
+    <style>
+        #output {
+            font-weight: bold;
+        }
+
+        #output p {
+            word-wrap: break-word;
+            color: green;
+        }
+    </style>
+    <script>
+        var uri = 'ws://' + window.location.host + '/ws/Fixtures';
+        var ws = new WebSocket(uri);
+
+        ws.onopen = function () {
+            console.log('Connected...');
+        }
+
+        ws.onmessage = function (evt) {
+
+            var out = document.getElementById('output');
+            var pre = document.createElement("p");
+            pre.innerHTML = evt.data;
+            out.appendChild(pre);
+
+            setTimeout(function () {
+                ws.send('Received!');
+            }, 1000);
+        }
+
+    </script>
+</head>
+
+<body>
+    <p id="output"></p>
+</body>
+
+</html>

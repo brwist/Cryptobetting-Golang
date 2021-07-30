@@ -105,3 +105,11 @@ func EndFixture(req *EndFixtureReq, db *gorm.DB) EndFixtureRes {
 
 	return res
 }
+
+func GetFixtures(db *gorm.DB) []Fixture {
+	var res []Fixture
+
+	db.Where(&Fixture{}).Find(&res)
+
+	return res
+}

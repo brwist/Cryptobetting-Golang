@@ -18,7 +18,11 @@ func RunServer() {
 
 	api.HandleRoutes(ech)
 	fixtures.HandleRoutes(ech)
-	HandleWebsocketRoutes((ech))
+
+	HandleWebsocketRoutes(ech)
+
+	// public assets
+	ech.File("/Fixtures-Test", "public/fixtures-test.htm")
 
 	ech.Logger.Fatal(ech.Start(":" + db.HTTP_PORT))
 }

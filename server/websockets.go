@@ -3,10 +3,13 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/onemanshow79/Cryptobetting/db"
+	"github.com/onemanshow79/Cryptobetting/models"
 )
 
 // fixture socket
@@ -37,12 +40,12 @@ type (
 )
 
 var (
-	upgrader     = websocket.Upgrader{}
-	wsFixtureRes = &WsFixtureRes{
-		Timestamp: time.Now().String(),
-		Price:     0,
-		Type:      OnlyPriceType,
-		Fixtures:  []WsFixtureItem{},
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  102400,
+		WriteBufferSize: 102400,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
 	}
 )
 
@@ -58,10 +61,26 @@ func ServeWebsocket(c echo.Context) error {
 	defer ws.Close()
 
 	for {
-		//store
-		data, _ := json.Marshal(wsFixtureRes)
+
+		// wating for 1seconds
+		time.Sleep(time.Second)
 
 		// Write
+		db := db.CreateConnection()
+		fixtures := models.GetFixtures(db)
+		var results []WsFixtureItem
+		for _, fixture := range fixtures {
+			item := WsFixtureItem{}
+			item.FixtureId = fixture.FixtureID
+			results = append(results, item)
+		}
+		response := &WsFixtureRes{
+			Timestamp: time.Now().String(),
+			Price:     0,
+			Type:      OnlyPriceType,
+			Fixtures:  results,
+		}
+		data, _ := json.Marshal(response)
 		err := ws.WriteMessage(websocket.TextMessage, []byte(data))
 		if err != nil {
 			c.Logger().Error(err)
