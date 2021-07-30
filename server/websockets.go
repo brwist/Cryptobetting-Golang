@@ -72,6 +72,27 @@ func ServeWebsocket(c echo.Context) error {
 		for _, fixture := range fixtures {
 			item := WsFixtureItem{}
 			item.FixtureId = fixture.FixtureID
+
+			//TODO: need to change real logic
+			probas := []WsFixtureProbability{
+				{
+					Strike: 34700.0,
+					Over:   1.627,
+					Under:  1.373,
+				},
+				{
+					Strike: 34800.0,
+					Over:   1.401,
+					Under:  1.599,
+				},
+				{
+					Strike: 34900.0,
+					Over:   1.205,
+					Under:  1.795,
+				},
+			}
+
+			item.Probabilities = probas
 			results = append(results, item)
 		}
 		response := &WsFixtureRes{

@@ -6,13 +6,10 @@
     <title>WebSocket Test</title>
     <style>
         #output {
-            font-weight: bold;
-        }
-
-        #output p {
-            word-wrap: break-word;
-            color: green;
-        }
+            width: 80%;
+            height: 20%;
+            overflow: auto;
+        } 
     </style>
     <script>
         var uri = 'ws://' + window.location.host + '/ws/Fixtures';
@@ -24,10 +21,7 @@
 
         ws.onmessage = function (evt) {
 
-            var out = document.getElementById('output');
-            var pre = document.createElement("p");
-            pre.innerHTML = evt.data;
-            out.appendChild(pre);
+            document.getElementById('output').innerHTML = evt.data;
 
             setTimeout(function () {
                 ws.send('Received!');
@@ -38,6 +32,10 @@
 </head>
 
 <body>
+    <h2>
+        WebSocket Test
+    </h2>
+    <hr>
     <p id="output"></p>
 </body>
 
